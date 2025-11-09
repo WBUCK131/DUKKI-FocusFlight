@@ -1,40 +1,244 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+
+    
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DUKKI FoucsFlight</title>
+<title>DUKKI FocusFlight</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<style>
-/* 🌙 다크 모드 기본 스타일 변수 정의 */
-:root {
-    --color-primary: #0077ff; 
-    --color-accent-red: #dc3545; 
-    --color-text-light: #f8f9fa; 
-    --color-text-dim: #adb5bd; 
-    --color-background-dark: #212529; 
-    --color-surface-dark: #343a40; 
-    --color-surface-lighter: #495057; 
-    --color-surface-translucent: rgba(52, 58, 64, 0.7); 
-    --color-border-dark: rgba(255, 255, 255, 0.1); 
-    --color-shadow-dark: rgba(0, 0, 0, 0.4); 
-}
+<link rel="stylesheet" href="style.css" />
 
-/* ✈️ 기본 레이아웃 및 다크 모드 배경 */
-html, body { height:100%; margin:0; padding:0; }
-body { 
-    font-family:Arial, sans-serif; 
-    background: var(--color-background-dark); 
-    color: var(--color-text-light); 
-    overflow: hidden; 
-}
-#map { width:100%; height:100%; position:absolute; top:0; left:0; z-index:0; }
 
-/* 💎 글래스모피즘 스타일 */
-.controls-container, #timerContainer, #bottomNav, .modal-content, .settings-content, #nameModal .modal-content {
-    background: var(--color-surface-translucent); 
-    -webkit-backdrop-filter: blur(20px); 
+<body class="map-style-satellite"> 
+
+<div id="map"></div>
+
+<div id="flightPopup" class="flight-popup" style="display:none;"></div>
+
+<div id="stampAnimation">
+    <div style="
+        font-size: 0.8em; 
+        font-weight: 900; 
+        line-height: 1;
+        transform: rotate(10deg);
+        border: 10px solid var(--color-accent-red); 
+        border-radius: 50%; 
+        padding: 40px; 
+        display: inline-block;
+        background: rgba(0,0,0,0.2);
+    ">
+        <span style="display: block; transform: rotate(-10deg);">
+            <span style="font-size: 0.3em; display: block;">FLIGHT</span>
+            <span style="font-size: 1em; display: block;">COMPLETED</span>
+            <span style="font-size: 0.3em; display: block;">✈️</span>
+        </span>
+    </div>
+</div>
+
+<div id="greetingContainer" style="display: none;">
+</div>
+
+<div class="controls-container">
+  <input type="text" id="departureSearch" placeholder="출발지 검색 (도시, 코드)">
+  <select id="departureSelect">
+    <option value="" disabled selected>출발 도시 선택</option>
+  </select>
+  <div id="selectedFlightInfo" style="display:none;"></div> 
+  <input type="text" id="arrivalSearch" placeholder="도착지 검색 (도시, 코드)" style="display:none;">
+  <div id="arrivalList"></div>
+  <button id="ticketBtn" style="display:none;">좌석 선택</button>
+</div>
+
+<!-- 타이머 메인 컨테이너 -->  
+<div id="timerContainer" >  
+    <!-- 홈화면: DUKKI Focus 텍스트만 -->  
+    <div id="timerDisplayPreFlight">DUKKI Focus</div>  
+      
+    <!-- 비행 중: 각 요소별 컨테이너 -->  
+        <!-- 타이머 컨테이너 -->  
+        <div class="timer-box timer-box-time">  
+            <div class="timer-box-label">남은 시간</div>  
+            <div id="timerDisplay" class="timer-box-value">00H00M00S</div>  
+            <div id="focusStatus"></div>  
+        </div>  
+          
+        <!-- 시간 컨테이너 -->  
+        <div class="timer-box timer-box-clock">  
+            <div class="clock-item">  
+                <div class="timer-box-label">현재시간</div>  
+                <div id="currentTimeDisplay" class="timer-box-value">--:--</div>  
+            </div>  
+            <div class="clock-item">  
+                <div class="timer-box-label">현지시간</div>  
+                <div id="localTimeDisplay" class="timer-box-value">--:--</div>  
+            </div>  
+        </div>  
+          
+        <!-- 거리 컨테이너 -->  
+        <div class="timer-box timer-box-distance">  
+            <div class="timer-box-label">남은 거리</div>  
+            <div id="distanceDisplay" class="timer-box-value">0 KM</div>  
+        </div>  
+      
+</div>  
+  
+
+<button id="moneyButton" class="money-button">
+    💰 <span id="moneyDisplay">1</span>
+</button>
+
+<button id="toggleFollowBtn" class="follow-toggle-btn">
+    <span id="followIcon">📍</span>
+</button>
+
+
+<audio id="backgroundMusic" src="soundair.mp3" autoplay loop>
+</audio>
+
+<div id="recordsContainer">
+  <button class="close-container-btn">×</button> 
+  <h3 style="text-align:center; margin-top:50px;">✈️ 여행 기록</h3>
+  
+  <div id="recordFilterContainer">
+      <button class="record-filter-btn active" data-filter="all">전체</button>
+      <button class="record-filter-btn" data-filter="completed">완료함</button>
+      <button class="record-filter-btn" data-filter="incomplete">미완료</button>
+  </div>
+  
+  <div style="text-align: center; padding: 0 20px;">
+    <button id="clearRecordsBtn">기록 초기화</button>
+  </div>
+  <div id="records"></div>
+</div>
+
+<div id="trendsContainer">
+  <button class="close-container-btn">×</button> 
+  <h3 style="text-align:center; margin-top:50px;">📊 비행 추세 분석</h3>
+  <div class="trends-grid" id="trendsData">
+    </div>
+</div>
+
+<div class="modal" id="ticketModal">
+  <div class="modal-content">
+    <h3>티켓팅</h3>
+    
+    <div style="text-align:center; font-weight:bold; margin-bottom:10px;">
+      선택: <span id="selectedSeatDisplay" style="color:var(--color-primary);">좌석 없음</span> / 
+      <span id="selectedFocusModeDisplay" style="color:var(--color-primary);">모드 없음</span>
+    </div>
+
+    <div id="seatSelectionContainer">
+        <div id="fuselageWrapper">
+            <span class="fuselage-part cockpit"></span>
+            <div id="seatMap"></div>
+            <span class="fuselage-part tail"></span>
+        </div>
+    </div>
+    
+    <div id="focusModeSelector"> 
+        집중 모드 선택:
+        <div id="focusModeButtons"></div> 
+    </div>
+
+    <button id="reselectSeatBtn" class="hidden" style="width:100%; background: var(--color-surface-lighter); color: var(--color-text-light); border: 1px solid var(--color-border-dark); margin-top: 5px;">
+        좌석 다시 선택 🔄
+    </button>
+    
+    <div class="modal-buttons-container" id="selectionButtons">
+        <button id="confirmSelectionBtn" disabled>티켓 발권</button>
+        <button id="closeModalBtn">취소</button>
+    </div>
+
+    <div id="boardingPassContainer" style="display:none;">
+        <div class="boarding-pass">
+            <div class="bp-info">
+                <div class="bp-route" id="bpRoute">ICN → JFK</div>
+                <div class="bp-details">
+                    <span id="bpFlightNo">FLT: AA000</span> | 
+                    <span id="bpGate">GATE: A9</span> |
+                    <span id="bpClass">CLASS: F</span>
+                </div>
+            </div>
+            <div class="bp-seat-mode">
+                <div class="bp-seat" id="bpSeat">A-Z</div>
+                <div class="bp-mode" id="bpFocusMode"></div> 
+            </div>
+        </div>
+        <div class="barcode-panel">
+            <div class="barcode"></div>
+            <div class="barcode-text" id="bpBarcodeText">FOCUSFLIGHT-A9-A-Z-STUDY-DUKKI</div>
+            
+            <div id="slideTrack">
+                <div id="slideBackground"></div>
+                <div id="slideHandle">✈️</div>
+                <div id="slideText">밀어서 티켓 스캔 🎫</div> 
+            </div>
+            <div style="font-size:12px; color:#fff; font-weight:bold; margin-top: 5px; display:none;">
+                게이트에 티켓을 스캔하세요
+            </div>
+        </div>
+    </div>
+    
+  </div>
+</div>
+
+<div class="modal" id="nameModal">
+    <div class="modal-content">
+        <h3>환영합니다! 🚀</h3>
+        <p>DUKKI FocusFlight에서 집중을 여행하세요.<br>이름은 무엇인가요?.</p>
+        <input type="text" id="userNameInput" placeholder="이름을 입력하세요">
+        <button id="saveNameBtn" style="margin-top: 20px;">이름 설정 완료</button>
+    </div>
+</div>
+
+<div class="modal" id="settingsModal">
+    <div class="settings-content">
+        <h3>설정</h3>
+        <button id="editNameBtn">이름 수정하기</button>
+        
+        <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">지도 스타일 설정 🗺️</h4>
+        <div id="mapStyleButtons">
+            <button class="map-style-button" data-style="2d">2D 일반 지도</button>
+            <button class="map-style-button active" data-style="satellite">위성 지도</button> 
+        </div>
+        
+        <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">데이터 관리 💾</h4>
+        <button onclick="exportData()">데이터 내보내기</button>
+        <button onclick="importData()">데이터 불러오기</button>
+        
+        <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">By TEAMBUCK</div> 
+        <button id="closeSettingsModalBtn">닫기</button>
+    </div>
+</div>
+
+<div class="modal" id="shopContainer">
+    <div class="settings-content"> <button class="close-container-btn" id="closeShopBtn">×</button> 
+        <h3>🛍️ 아이템 상점</h3>
+        <p style="text-align: center; color: var(--color-text-dim); margin-top: 50px; margin-bottom: 50px;">
+            아직 준비 중입니다.<br>
+            곧 다양한 아이템이 추가될 예정입니다! ✈️
+        </p>
+        <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">By TEAMBUCK</div> 
+    </div>
+</div>
+
+<div id="bottomNav">
+  <button id="homeBtn" class="active">홈</button>
+  <button id="recordBtn">여행 기록</button>
+  <button id="trendsBtn">추세</button>
+  <button id="shopBtn">상점</button> 
+  <button id="settingsBtn">설정</button> 
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="main.js">
+
+</script>
+</body>
+</html>    -webkit-backdrop-filter: blur(20px); 
     backdrop-filter: blur(20px); 
     border: 1px solid var(--color-border-dark);
     box-shadow: 0 8px 32px 0 var(--color-shadow-dark);
