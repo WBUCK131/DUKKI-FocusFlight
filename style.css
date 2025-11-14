@@ -24,6 +24,62 @@ body {
 }
 #map { width:100%; height:100%; position:absolute; top:0; left:0; z-index:0; }
 
+/* 🗺️ 지도 스타일별 추가 설정 */
+
+/* 2D 일반 지도 스타일 */
+.map-style-2d #map {
+    filter: none;
+}
+.map-style-2d .leaflet-popup-content-wrapper {
+    background: var(--color-surface-translucent); /* 밝은 지도에 맞게 어둡게 */
+    color: var(--color-text-light);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border-dark);
+}
+.map-style-2d .leaflet-popup-tip {
+    background: var(--color-surface-translucent);
+    box-shadow: none;
+}
+
+/* 2D 다크모드 지도 스타일 👈 이 섹션이 추가되었습니다. */
+.map-style-dark2d #map {
+    filter: none; /* dark2d 타일 자체가 다크이므로 필터 제거 */
+}
+.map-style-dark2d .leaflet-popup-content-wrapper {
+    /* 다크모드 지도에 맞게 기존 스타일 유지 */
+    background: var(--color-surface-translucent);
+    color: var(--color-text-light);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border-dark);
+}
+.map-style-dark2d .leaflet-popup-tip {
+    background: var(--color-surface-translucent);
+    box-shadow: none;
+}
+
+/* 위성 지도 스타일 */
+.map-style-satellite #map {
+    /* 위성 사진을 다크모드와 어울리게 어둡게 합니다 */
+    filter: brightness(0.7) contrast(1.2) grayscale(0.2); 
+}
+.map-style-satellite .leaflet-popup-content-wrapper {
+    /* 글래스모피즘 스타일 그대로 사용 */
+    background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.0) 60%
+    ), var(--color-surface-translucent);
+    -webkit-backdrop-filter: blur(25px); 
+    backdrop-filter: blur(25px); 
+    border: 1px solid var(--color-border-dark);
+    box-shadow: 0 8px 32px 0 var(--color-shadow-dark);
+    color: var(--color-text-light);
+}
+.map-style-satellite .leaflet-popup-tip {
+    background: var(--color-surface-translucent);
+    box-shadow: none;
+}
+
 /* 💎 글래스모피즘 스타일 */
 .controls-container, #bottomNav, .modal-content, .settings-content, #nameModal .modal-content {
     /* [수정] 글래스모피즘 강화: 하이라이트 그라데이션 추가 */
@@ -1159,4 +1215,4 @@ body {
 #slideHandle:hover {
     background: #0099ff;
 }
-}
+[  ]
