@@ -1,0 +1,1162 @@
+/* 🌙 다크 모드 기본 스타일 변수 정의 */
+:root {
+    --color-primary: #0077ff; 
+    --color-accent-red: #dc3545; 
+    --color-text-light: #f8f9fa; 
+    --color-text-dim: #adb5bd; 
+    --color-background-dark: #212529; 
+    --color-surface-dark: #343a40; 
+    --color-surface-lighter: #495057; 
+    /* [수정] 글래스모피즘 강화: 배경 투명도 증가 (기존 0.7 -> 0.55) */
+    --color-surface-translucent: rgba(52, 58, 64, 0.55); 
+    /* [수정] 글래스모피즘 강화: 테두리 선명도 증가 (기존 0.1 -> 0.18) */
+    --color-border-dark: rgba(255, 255, 255, 0.18); 
+    --color-shadow-dark: rgba(0, 0, 0, 0.4); 
+}
+
+/* ✈️ 기본 레이아웃 및 다크 모드 배경 */
+html, body { height:100%; margin:0; padding:0; }
+body { 
+    font-family:Arial, sans-serif; 
+    background: var(--color-background-dark); 
+    color: var(--color-text-light); 
+    overflow: hidden; 
+}
+#map { width:100%; height:100%; position:absolute; top:0; left:0; z-index:0; }
+
+/* 💎 글래스모피즘 스타일 */
+.controls-container, #bottomNav, .modal-content, .settings-content, #nameModal .modal-content {
+    /* [수정] 글래스모피즘 강화: 하이라이트 그라데이션 추가 */
+    background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.0) 60%
+    ), var(--color-surface-translucent);
+    /* [수정] 글래스모피즘 강화: 블러 효과 증가 (기존 20px -> 25px) */
+    -webkit-backdrop-filter: blur(25px); 
+    backdrop-filter: blur(25px); 
+    border: 1px solid var(--color-border-dark);
+    box-shadow: 0 8px 32px 0 var(--color-shadow-dark);
+    color: var(--color-text-light);
+}
+
+/* 🌟 모달 전체가 스크롤 가능하도록 유지 */
+.modal {
+    display: none; 
+    position: fixed; top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.6); 
+    z-index: 1000; 
+    justify-content: center; 
+    align-items: flex-start; 
+    overflow-y: auto; 
+    padding: 20px 0; 
+}
+
+/* 🌟 티켓 모달 콘텐츠 크기 축소 */
+.modal-content, .settings-content { 
+  background: var(--color-surface-dark); 
+  border: 1px solid var(--color-border-dark);
+  color: var(--color-text-light); 
+  padding: 20px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 350px; /* ⬅️ 티켓팅 창 최대 너비 */
+  text-align: center;
+  margin: auto; 
+}
+
+/* 🛑 비행 시작/완료 팝업 스타일 */
+.flight-popup {
+    display: none; 
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    padding: 15px 25px;
+    border-radius: 15px;
+    /* [수정] 글래스모피즘 강화: 하이라이트 그라데이션 추가 */
+    background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.0) 60%
+    ), var(--color-surface-translucent);
+    /* [수정] 글래스모피즘 강화: 블러 효과 증가 (기존 20px -> 25px) */
+    -webkit-backdrop-filter: blur(25px); 
+    backdrop-filter: blur(25px); 
+    border: 1px solid var(--color-border-dark);
+    box-shadow: 0 8px 32px 0 var(--color-shadow-dark);
+    color: var(--color-text-light);
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* 🌟 도장 애니메이션 스타일 */
+#stampAnimation {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9998; 
+    font-size: 150px; 
+    color: var(--color-accent-red);
+    text-shadow: 0 0 10px rgba(220, 53, 69, 0.8);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 🎯 도장 애니메이션 키프레임 (4초 동안) */
+@keyframes stampEffect {
+    0% { transform: translate(-50%, -50%) scale(0.1) rotate(0deg); opacity: 0; }
+    5% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); opacity: 1; } 
+    10% { transform: translate(-50%, -50%) scale(1) rotate(-5deg); opacity: 1; }
+    90% { transform: translate(-50%, -50%) scale(1) rotate(-5deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5) rotate(0deg); opacity: 0; } 
+}
+
+#stampAnimation.stamp-animate {
+    display: block;
+    animation: stampEffect 4.0s ease-out forwards;
+}
+
+/* 🛩️ 이모지 마커 스타일 */
+.emoji-marker-icon {
+    font-size: 28px; 
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7); 
+    background: transparent !important;
+    border: none !important;
+    display: block !important; 
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+    margin: 0 auto; 
+    width: 32px;
+    height: 32px;
+    z-index: 999; 
+    position: absolute !important;
+}
+
+/* 🌟 공항 정보 마커 스타일 */
+.airport-marker-icon {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--color-background-dark);
+    background-color: #ffc107; 
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid #ff9800;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+.airport-marker-icon span {
+    margin-left: 5px;
+    color: var(--color-background-dark); 
+}
+.airport-marker-icon.departure {
+    background-color: #ffc107;
+    border-color: #ff9800;
+}
+.airport-marker-icon.arrival {
+    background-color: #8aff8a; 
+    border-color: #4CAF50;
+}
+
+/* --- Controls/Buttons --- */
+.controls-container {
+  position:absolute; bottom:70px; left:12px; z-index:100;
+  padding:10px; border-radius:15px; 
+  display:flex; flex-direction:column;
+  transition: all 0.3s; 
+  min-width: 200px; 
+}
+
+/* 🌟 인사말 컨테이너 스타일 */
+#greetingContainer {
+    position: absolute;
+    bottom: 290px; 
+    left: 12px;
+    z-index: 100;
+    padding: 5px 10px; 
+    border-radius: 15px;
+    background: transparent; 
+    backdrop-filter: none; 
+    border: none;
+    box-shadow: none; 
+    color: var(--color-text-light); 
+    font-size: 24px; 
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7); 
+    min-width: 200px;
+    text-align: left; 
+    transition: all 0.3s; 
+}
+
+/* input[type="text"] 스타일 */
+.controls-container select, 
+.controls-container button,
+.controls-container input[type="text"],
+#nameModal input[type="text"],
+#nameModal button { 
+  margin:4px 0; font-size:16px; padding:8px 12px; 
+  border-radius: 10px; 
+  background: var(--color-surface-dark);
+  color: var(--color-text-light); 
+  border: 1px solid var(--color-border-dark);
+  box-sizing: border-box; 
+}
+
+.controls-container select,
+.controls-container input[type="text"],
+#nameModal input[type="text"] {
+    width: 100%;
+}
+.controls-container button,
+#nameModal button {
+    cursor: pointer;
+    width: auto; 
+}
+
+.controls-container button:hover,
+.controls-container select:hover,
+.controls-container input[type="text"]:hover,
+#nameModal button:hover,
+#nameModal input[type="text"]:hover {
+    background: var(--color-surface-lighter);
+}
+.controls-container select {
+    appearance: none; 
+    background: var(--color-surface-dark) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="%23adb5bd" d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.094 6.914 4.68 8.328l4.613 4.622z"/></svg>') no-repeat right 10px center;
+    background-size: 15px;
+}
+
+.controls-container select option {
+    background-color: var(--color-surface-dark); 
+    color: var(--color-text-light);
+}
+
+/* 도착지 목록 스크롤 */
+#arrivalList {
+    display: none;
+    max-height: 220px; 
+    overflow-y: auto;
+    padding-right: 5px; 
+}
+
+.arrival-item { 
+  cursor:pointer; padding:8px 10px; 
+  border-radius:10px; 
+  margin:4px 0; 
+  background: var(--color-surface-dark); 
+  color: var(--color-text-light); 
+  box-shadow:0 1px 3px var(--color-shadow-dark); 
+  transition: all 0.2s;
+  /* 맵의 제목처럼 보이도록 폰트 조정 */
+  font-weight: bold; 
+  font-size: 16px; 
+  line-height: 1.4;
+}
+.arrival-item:hover {
+    background: var(--color-surface-lighter);
+}
+.arrival-item.selected-arrival {
+    background: var(--color-surface-dark); 
+    color: var(--color-primary); 
+    box-shadow: 0 3px 8px rgba(0, 119, 255, 0.5);
+    transform: translateY(-1px);
+    border: 2px solid var(--color-primary); 
+}
+.controls-disabled {
+    pointer-events: none; 
+}
+
+/* 5초 꾹 누름 버튼 스타일 */
+#ticketBtn {
+    --progress: 0%; 
+    background: var(--color-primary);
+    color: white;
+    font-weight: bold;
+    background-image: linear-gradient(to right, var(--color-accent-red) var(--progress), var(--color-primary) var(--progress));
+    background-size: 100% 100%; 
+    background-repeat: no-repeat;
+    transition: background-image 0.05s linear; 
+    border: none;
+}
+#ticketBtn.disabled-during-flight {
+    pointer-events: auto !important; 
+}
+
+/* ⏱️ 메인 타이머 컨테이너 */  
+#timerContainer {  
+    position: absolute;  
+    display: none;
+    top: 12px;  
+    left: 0;  
+    width: 100%;  
+    display: flex;
+    background-color: transparent;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0 12px;
+    box-sizing: border-box;
+    z-index: 100;  
+    text-align: center;  
+}  
+  
+/* 🆕 홈화면: DUKKI Focus 텍스트 전용 스타일 */  
+#timerDisplayPreFlight {  
+    display: none;  
+    font-size: 16px;  
+    font-weight: bold;  
+    color: var(--color-text-light);  
+    /* [수정] 글래스모피즘 강화: 하이라이트 그라데이션 추가 */
+    background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.0) 60%
+    ), var(--color-surface-translucent);
+    /* [수정] 글래스모피즘 강화: 블러 효과 증가 (기존 20px -> 25px) */
+    -webkit-backdrop-filter: blur(25px);  
+    backdrop-filter: blur(25px);  
+    border: 1px solid var(--color-border-dark);  
+    border-radius: 15px;  
+    padding: 8px 16px;  
+    box-shadow: 0 4px 16px 0 var(--color-shadow-dark);  
+}  
+#timerContainer:not(.is-flight-active) #timerDisplayPreFlight {  
+    display: block;  
+}  
+  
+/* 🆕 각 요소별 박스 스타일 */  
+.timer-box {  
+    /* [수정] 글래스모피즘 강화: 하이라이트 그라데이션 추가 */
+    background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.0) 60%
+    ), var(--color-surface-translucent);
+    /* [수정] 글래스모피즘 강화: 블러 효과 증가 (기존 20px -> 25px) */
+    -webkit-backdrop-filter: blur(25px);  
+    backdrop-filter: blur(25px);  
+    border: 1px solid var(--color-border-dark);  
+    border-radius: 12px;  
+    padding: 8px 12px;  
+    box-shadow: 0 4px 16px 0 var(--color-shadow-dark);  
+    text-align: center;  
+    min-width: fit-content;  
+}  
+  
+.timer-box-label {  
+    color: rgba(248, 249, 250, 0.7);  
+    font-size: 10px;  
+    font-weight: bold;  
+    margin-bottom: 2px;  
+}  
+  
+.timer-box-value {  
+    color: var(--color-text-light);  
+    font-weight: 900;  
+    font-size: 14px;  
+}  
+  
+/* 타이머 박스 너비 조정 */  
+.timer-box-time {  
+    width: 80px;  
+}  
+  
+.timer-box-clock {  
+    width: 100px;  
+}  
+  
+.timer-box-distance {  
+    width: 70px;  
+}  
+  
+/* 시간 박스 내부 시간들 간격 */  
+.timer-box-clock .clock-item {  
+    margin-bottom: 4px;  
+}  
+.timer-box-clock .clock-item:last-child {  
+    margin-bottom: 0;  
+}  
+  
+/* Focus Status */  
+#focusStatus {   
+    display: none;  
+    font-size: 12px;  
+    font-weight: bold;  
+    color: #8aff8a;   
+    margin-top: 8px;  
+    text-align: center;  
+}  
+#timerContainer.is-flight-active #focusStatus {  
+    display: block;  
+}  
+
+/* 🗺️ 지도 따라가기/자유 이동 버튼 스타일 */
+.follow-toggle-btn {
+    position: absolute; 
+    top: 72px; 
+    right: 12px; 
+    z-index: 100;
+    width: 45px; 
+    height: 45px;
+    border-radius: 50%; 
+    /* [수정] 글래스모피즘 강화: 하이라이트 그라데이션 추가 */
+    background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.0) 60%
+    ), var(--color-surface-translucent);
+    /* [수정] 글래스모피즘 강화: 블러 효과 증가 (기존 20px -> 25px) */
+    -webkit-backdrop-filter: blur(25px); 
+    backdrop-filter: blur(25px); 
+    border: 1px solid var(--color-border-dark);
+    box-shadow: 0 4px 16px 0 var(--color-shadow-dark);
+    color: var(--color-text-light);
+    font-size: 20px;
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* 💰 돈 버튼 기본 스타일 (최상단 우측) */
+.money-button {
+    position: absolute; 
+    top: 12px; 
+    right: 12px; 
+    z-index: 100;
+    width: 60px; 
+    height: 45px;
+    border-radius: 15px; 
+    background: #ffc107; 
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ff9800;
+    box-shadow: 0 4px 16px 0 var(--color-shadow-dark);
+    cursor: default;
+    transition: all 0.3s ease-in-out; /* 위치 전환 애니메이션 */
+}
+
+/* 💰 비행 중 위치 스타일 (follow button 아래) */
+.money-button.in-flight {
+    top: 127px; 
+    right: 12px;
+    z-index: 100;
+}
+
+.follow-toggle-btn:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* 🆕 비행 정보 표시 스타일 */
+#selectedFlightInfo {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--color-surface-dark); 
+  border: 2px solid var(--color-primary);
+  display: flex; 
+  flex-direction: column;
+  margin: 4px 0;
+  line-height: 1.5; 
+}
+.flight-subtitle { 
+    color: var(--color-primary); 
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* 🧭 하단 네비게이션 바 스타일 */
+#bottomNav { 
+    position:fixed; bottom:0; left:0; width:100%; 
+    display:flex; justify-content:space-around; 
+    padding:8px 0; 
+    box-shadow:0 -2px 6px var(--color-shadow-dark); 
+    z-index:1000;
+}
+#bottomNav button {
+    background: transparent;
+    border: none;
+    color: var(--color-text-dim);
+    font-size: 14px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: color 0.2s, background-color 0.2s;
+    border-radius: 10px;
+}
+#bottomNav button.active {
+    color: var(--color-primary);
+    background: rgba(0, 119, 255, 0.1);
+}
+#bottomNav button:hover:not(.active) {
+    color: var(--color-text-light);
+}
+
+/* 📜 기록/추세 컨테이너 공통 스타일 (기존 유지) */
+#recordsContainer, #trendsContainer {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--color-background-dark); 
+    z-index: 500;
+    overflow-y: auto;
+    display: none; 
+    padding: 20px 0 80px 0; 
+}
+.close-container-btn {
+    position: absolute; top: 20px; right: 20px;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+/* 📈 추세 분석 컨테이너 디자인 (기존 유지) */
+.trends-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 0 20px;
+}
+.trend-item {
+    background: var(--color-surface-dark); 
+    box-shadow: 0 4px 10px var(--color-shadow-dark); 
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+}
+.trend-label { color: var(--color-text-dim); font-size: 14px; margin-bottom: 5px; }
+.trend-value { color: var(--color-primary); font-size: 28px; font-weight: bold; }
+.trend-item:last-child[style*="grid-column"] {
+    background: linear-gradient(135deg, var(--color-primary) 10%, var(--color-surface-dark) 80%);
+    color: white;
+}
+.trend-item:last-child[style*="grid-column"] .trend-label,
+.trend-item:last-child[style*="grid-column"] .trend-value,
+.trend-item:last-child[style*="grid-column"] div {
+    color: white !important;
+}
+
+/* 📜 여행 기록 컨테이너 및 티켓 디자인 (기존 유지) */
+#records { padding: 0 10px; }
+.ticket-item {
+    width: 90%;
+    max-width: 400px;
+    margin: 20px auto;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 6px 15px var(--color-shadow-dark);
+    position: relative;
+}
+.ticket-main {
+    background-color: var(--color-surface-lighter); 
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px dashed #555; 
+    color: var(--color-text-light);
+    position: relative;
+}
+.ticket-main::before, .ticket-main::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    width: 20px; height: 20px;
+    background: var(--color-background-dark); 
+    border-radius: 50%;
+    z-index: 2;
+}
+.ticket-main::before { left: -10px; }
+.ticket-main::after { right: -10px; }
+
+.ticket-header { color: var(--color-primary); font-size: 20px; font-weight: bold;}
+.ticket-time-code { font-size: 14px; color: var(--color-text-dim); margin-top: 5px;}
+
+.ticket-info-panel {
+    background-color: var(--color-surface-dark);
+    padding: 15px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--color-text-dim);
+}
+.ticket-info-panel > div {
+    width: 50%; 
+    box-sizing: border-box;
+}
+.ticket-info-label { color: var(--color-text-light); font-weight: bold;}
+.ticket-info-value { color: var(--color-primary); font-weight: bold;}
+#recordsContainer h3 { color: var(--color-primary); }
+#clearRecordsBtn { 
+    background:var(--color-accent-red); 
+    color:white; border:none; 
+    padding:8px 15px; border-radius:10px; 
+    cursor:pointer;
+    margin-bottom: 20px;
+}
+#recordFilterContainer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 0 20px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.record-filter-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border: 2px solid var(--color-surface-lighter);
+    background: var(--color-surface-dark);
+    color: var(--color-text-dim);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+.record-filter-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* ----------------------------- */
+/* 모달 및 기타 UI 스타일 */
+
+.modal-content h3, .settings-content h3 { color: var(--color-primary); margin-top: 0;}
+
+/* 모달 버튼 컨테이너 */
+.modal-buttons-container {
+    display: flex;
+    gap: 10px; 
+    margin-top: 20px;
+}
+
+/* 모달 버튼 스타일 */
+.modal-buttons-container button {
+    flex: 1; 
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#confirmSelectionBtn {
+    background: var(--color-primary);
+    color: white;
+}
+
+#confirmSelectionBtn:disabled {
+    background: var(--color-surface-lighter);
+    color: var(--color-text-dim);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+#closeModalBtn { 
+    background:var(--color-surface-lighter); 
+    color:var(--color-text-light); 
+}
+#saveNameBtn {
+    background:var(--color-primary); 
+    color:white; 
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* 🌟 좌석 선택 컨테이너 (접히는 대상) */
+/* 🚨 전체 컨테이너는 원래대로 유지 */
+#seatSelectionContainer {
+    max-height: 400px; /* 모달 내에서 최대 높이 */
+    overflow: hidden; /* 자식이 넘치면 숨김 (애니메이션용) */
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 1;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+#seatSelectionContainer.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* 🚨 ✈️ 새로운 래퍼: 기체 전체를 감싸고 스크롤을 담당합니다 */
+#fuselageWrapper {
+    max-width: 320px; /* 기체 전체 너비 */
+    margin: 15px auto; /* 중앙 정렬 */
+    display: flex;
+    flex-direction: column; /* 세로로 정렬 */
+    align-items: center; /* 가운데 정렬 */
+    
+    background-color: transparent; /* 배경색은 각 부분에서 담당 */
+    overflow-y: auto; /* 🚨 여기서 전체 기체가 스크롤됩니다. */
+    max-height: 350px; /* 🚨 모달 내 스크롤 가능한 높이 */
+    box-sizing: border-box;
+    position: relative; /* 자식 요소의 position:absolute 기준 */
+}
+
+/* 🚨 기체 부분 (조종석, 꼬리) 공통 스타일 */
+.fuselage-part {
+    display: block;
+    width: 100%; /* fuselageWrapper의 너비에 맞춤 */
+    min-height: 30px; /* 기본 높이 */
+    background-color: #3a4047; /* 기체 색상 */
+    /* 좌우에 곡률을 암시하는 그림자 효과 */
+    background-image: linear-gradient(90deg, 
+        rgba(0,0,0,0.3) 0%, 
+        transparent 10%, 
+        transparent 90%, 
+        rgba(0,0,0,0.3) 100%
+    );
+    border-left: 4px solid var(--color-background-dark);
+    border-right: 4px solid var(--color-background-dark);
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1; /* seatMap 위에 표시되도록 */
+}
+
+/* 🚨 조종석 부분 */
+.fuselage-part.cockpit {
+    height: 50px; /* 조종석 높이 */
+    border-top-left-radius: 150px; /* 위쪽 둥글게 */
+    border-top-right-radius: 150px; /* 위쪽 둥글게 */
+    margin-bottom: -1px; /* seamLine을 위해 겹치게 */
+    border-bottom: 1px solid var(--color-background-dark); /* 조종석과 본체 경계선 */
+    padding-top: 10px; /* 내용이 있다면 여백 */
+    
+    /* 조종석 유리창 모양 (가상 요소) */
+    &::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 25px;
+        background-color: #5f6e7f; /* 창 색상 */
+        border-radius: 5px;
+        border: 1px solid #7a8ba0;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+    }
+}
+
+/* 🚨 꼬리 부분 */
+.fuselage-part.tail {
+    height: 60px; /* 꼬리 높이 */
+    border-bottom-left-radius: 150px; /* 아래쪽 둥글게 */
+    border-bottom-right-radius: 150px; /* 아래쪽 둥글게 */
+    margin-top: -1px; /* seamLine을 위해 겹치게 */
+    border-top: 1px solid var(--color-background-dark); /* 본체와 꼬리 경계선 */
+    padding-bottom: 10px; /* 내용이 있다면 여백 */
+
+    /* 꼬리 날개 모양 (가상 요소) */
+    &::before, &::after {
+        content: '';
+        position: absolute;
+        bottom: 10px;
+        width: 40px;
+        height: 15px;
+        background-color: #3a4047;
+        border: 2px solid var(--color-background-dark);
+        border-radius: 0 0 5px 5px; /* 아래쪽만 둥글게 */
+        transform: rotate(10deg); /* 살짝 기울기 */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    &::before {
+        left: 30px;
+        transform: rotate(10deg);
+    }
+    &::after {
+        right: 30px;
+        transform: rotate(-10deg);
+    }
+}
+
+/* 🚨 메인 좌석 맵 (몸체 부분) */
+#seatMap { 
+    background-color: #3a4047; /* 기체 내부 패널 색상 */
+    /* 좌우에 곡률을 암시하는 그림자 효과 */
+    background-image: linear-gradient(90deg, 
+        rgba(0,0,0,0.3) 0%, 
+        transparent 10%, 
+        transparent 90%, 
+        rgba(0,0,0,0.3) 100%
+    );
+    border-left: 4px solid var(--color-background-dark);
+    border-right: 4px solid var(--color-background-dark);
+    padding: 10px 20px; 
+    
+    width: 100%; /* fuselageWrapper의 너비에 맞춤 */
+    /* border-radius는 조종석/꼬리에서 처리 */
+    /* margin은 fuselageWrapper에서 처리 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box; 
+    z-index: 2; /* 조종석/꼬리 위에 표시되도록 */
+}
+
+#seatMap .row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2px; /* 행 간격 축소 */
+}
+
+/* 🚨 #seatMap 내부의 시설물 (이전 다크 모드 스타일 유지) */
+#seatMap .section-facility {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 100%; 
+    margin: 5px 0;
+}
+#seatMap .section-facility .facility-item {
+    font-size: 14px;
+    color: var(--color-text-dim);
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: var(--color-surface-dark);
+}
+#seatMap .lav-left { margin-right: auto; }
+#seatMap .lav-right { margin-left: auto; }
+
+#seatMap .facility-item.exit-left {
+    margin-right: auto;
+    color: var(--color-accent-red);
+    font-weight: bold;
+    background: var(--color-surface-dark); 
+}
+#seatMap .facility-item.exit-right {
+    margin-left: auto;
+    color: var(--color-accent-red);
+    font-weight: bold;
+    background: var(--color-surface-dark); 
+}
+
+/* 🚨 구분선 (이전 다크 모드 스타일 유지) */
+#seatMap .section-separator {
+    width: 100%;
+    height: 15px;
+    margin: 5px 0;
+    border-top: 1px solid var(--color-border-dark);
+    border-bottom: 1px solid var(--color-border-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--color-text-dim);
+    font-weight: bold;
+    background: var(--color-surface-lighter);
+}
+
+/* --- 좌석 색상 (이전 다크 테마 스타일 유지) --- */
+
+.seat { 
+    background:var(--color-surface-lighter); 
+    color: var(--color-text-light);
+    width: 22px; height: 22px; 
+    line-height: 22px;
+    text-align: center;
+    border-radius: 5px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 8px; 
+    font-weight: bold;
+    transition: background 0.1s;
+}
+.seat.selected { 
+    background:var(--color-primary); 
+    color:white; 
+    box-shadow: 0 0 8px rgba(0, 119, 255, 0.6);
+}
+.seat:not(.selected):hover:not(.unavailable) {
+    background: #5a646c;
+}
+
+/* 🆕 좌석 클래스별 색상 차별화 */
+.seat[data-class="F"] { 
+    background: #FFD700; /* Gold-like */
+    color: #333; 
+    font-size: 10px; 
+} 
+.seat[data-class="B"] { 
+    background: #00ADB5; /* Teal-like */
+    color: #fff; 
+    font-size: 10px; 
+} 
+.seat[data-class="E"] { 
+    background: var(--color-surface-lighter); 
+    color: var(--color-text-light);
+    font-size: 8px; 
+} 
+/* 예약 불가능 좌석 스타일 */
+.seat.unavailable {
+    background: #6c757d !important; /* Dim gray */
+    color: #a9a9a9 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.aisle {
+    width: 15px; 
+    height: 22px; 
+    margin: 1px;
+}
+/* 🚨 3-3-3 배열의 중앙 통로를 더 넓게 (비즈니스/이코노미) */
+.row > .aisle:nth-child(4), .row > .aisle:nth-child(8) {
+    width: 20px; 
+}
+/* 🚨 2-2-2 배열의 중앙 통로 */
+.row[data-class="F"] > .aisle:nth-child(3), .row[data-class="F"] > .aisle:nth-child(6) {
+    width: 25px; 
+}
+
+/* 집중 모드 버튼 스타일 */
+#focusModeButtons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+.focus-button { 
+    padding: 8px 15px;
+    border: none;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.focus-button.selected {
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); 
+    border: 2px solid white; 
+}
+
+/* ⚙️ 설정 모달 스타일 (기존 유지) */
+.settings-content button {
+    background: var(--color-surface-lighter);
+    color: var(--color-text-light);
+    border: 2px solid #495057; 
+    margin: 5px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%; 
+    box-sizing: border-box; 
+}
+.map-style-button.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    font-weight: bold;
+}
+.close-container-btn {
+    background: var(--color-primary);
+    color: white;
+}
+.settings-content div {
+    color: var(--color-text-dim) !important; 
+    margin-bottom: 15px;
+}
+#mapStyleButtons {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+#mapStyleButtons .map-style-button {
+    flex: 1;
+    margin: 0;
+}
+
+/* 🎫 티켓/바코드 스타일 (프린트 모션 유지) */
+#boardingPassContainer {
+    margin-top: 20px;
+    background: var(--color-surface-lighter);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 15px var(--color-shadow-dark);
+    
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 3.0s ease-out, opacity 1.0s ease-out; 
+}
+#boardingPassContainer.show {
+    max-height: 500px; 
+    opacity: 1;
+}
+
+.boarding-pass {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--color-surface-lighter);
+    border-bottom: 2px dashed var(--color-border-dark); 
+    position: relative;
+}
+
+.boarding-pass::before,
+.boarding-pass::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    width: 20px; height: 20px;
+    background: var(--color-surface-dark); 
+    border-radius: 50%;
+    z-index: 2;
+}
+.boarding-pass::before { left: -10px; }
+.boarding-pass::after { right: -10px; }
+
+.bp-info {
+    text-align: left;
+}
+.bp-route {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--color-primary);
+}
+.bp-details {
+    font-size: 12px;
+    color: var(--color-text-dim);
+    margin-top: 5px;
+}
+.bp-seat-mode {
+    text-align: right;
+}
+.bp-seat {
+    font-size: 24px;
+    font-weight: 900;
+    color: #ff8888;
+}
+.bp-mode {
+    font-size: 14px;
+    color: var(--color-text-light);
+}
+
+.barcode-panel {
+    padding: 10px 15px;
+    background: var(--color-surface-dark);
+    text-align: center;
+}
+.barcode {
+    display: block;
+    width: 80%;
+    height: 60px;
+    margin: 5px auto;
+    background: repeating-linear-gradient(
+        90deg, 
+        #000, #000 2px, 
+        transparent 2px, transparent 4px
+    );
+    background-size: 10px 100%;
+    border: 1px solid #000;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+.barcode-text {
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--color-text-dim);
+}
+
+/* 🚀 슬라이드하여 비행 시작 스타일 (기존 유지) */
+#slideTrack {
+    position: relative;
+    width: 90%;
+    height: 35px;
+    margin: 15px auto 10px auto;
+    background: var(--color-surface-lighter); 
+    border-radius: 20px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+    cursor: grab; 
+    user-select: none;
+    overflow: hidden;
+}
+
+#slideTrack.sliding {
+    cursor: grabbing;
+}
+
+#slideBackground {
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; 
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 20px;
+    transition: background-color 0.2s;
+    z-index: 1;
+}
+
+#slideText {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    line-height: 35px;
+    color: var(--color-text-dim);
+    font-weight: bold;
+    font-size: 15px;
+    z-index: 2;
+    pointer-events: none; 
+}
+
+#slideHandle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 40px;
+    height: 31px;
+    background: var(--color-primary);
+    border-radius: 17px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+    z-index: 3;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+    cursor: grab; 
+}
+
+#slideHandle:hover {
+    background: #0099ff;
+}
+}

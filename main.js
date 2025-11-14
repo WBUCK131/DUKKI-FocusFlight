@@ -178,6 +178,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const followIcon = document.getElementById('followIcon');
     
     const backgroundMusic = document.getElementById('backgroundMusic'); 
+
+    // Try to autoplay background music; browsers often block autoplay with sound.
+    // We set preload and volume, attempt to play programmatically, and if the
+    // play() promise is rejected we show a small user-visible play button so
+    // the user can start audio with a gesture (required by many browsers).
+    try {
+        backgroundMusic.preload = 'auto';
+        backgroundMusic.volume = 0.6;
+    } catch (e) {
+        // ignore if element not present
+    }
+
+    // Note: do NOT attempt to autoplay on load. Background music will be
+    // started explicitly when a flight begins (startFlight) and paused in
+    // stopFlight. This avoids autoplay UI and respects user's choice.
     
     // 🆕 클락 관련 DOM 요소
     const clockContainer = document.getElementById('clockContainer');
@@ -579,7 +594,7 @@ if (markerEl) {
             // 🗺️ autoFollow 상태에 따라 맵 이동 결정
             if(autoFollow) {
                 map.panTo(path[step],{animate:false});
-                map.setZoom(13); 
+                //map.setZoom(13); 
             }
 
             const remainingDistance = calculateDistance(currentLat, currentLon, destLat, destLon);
@@ -1299,6 +1314,23 @@ document.querySelector('.timer-box-distance').style.display = 'none';
 
         showPopup("티켓이 스캔되었습니다. 비행을 시작합니다! 🛫", 3000);
 
+        // 자동 재생 시도: 비행 시작은 사용자의 제스처(슬라이드)로 유발되므로
+        // 대부분의 브라우저에서 play()가 허용됩니다. 실패하면 안내 팝업을 띄웁니다.
+        if (backgroundMusic) {
+            try {
+                backgroundMusic.currentTime = 0;
+                const playPromise = backgroundMusic.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // 자동 재생이 차단된 경우 사용자에게 간단 안내
+                        showPopup('브라우저 자동 재생 정책으로 음악이 차단되었습니다. 화면을 한 번 터치하면 음악이 재생됩니다.', 4000);
+                    });
+                }
+            } catch (e) {
+                console.warn('backgroundMusic play failed', e);
+            }
+        }
+
         const focus = pendingFlight.focus;
         const depAirport = airportData[pendingFlight.from];
         const arrAirport = airportData[pendingFlight.to];
@@ -1342,7 +1374,7 @@ document.querySelector('.timer-box-distance').style.display = 'block';
         // 🗺️ 비행 시작 시, 따라가기 모드 (autoFollow=true)로 설정
         autoFollow = true;
         followIcon.textContent = '📍';
-        map.setZoom(13);
+        //map.setZoom(13);
 
 
 
@@ -1417,6 +1449,16 @@ document.querySelector('.timer-box-distance').style.display = 'block';
         
         handleStopFlightEnd(); 
         clearInterval(timerInterval);
+
+        // 비행 종료 시 오디오 자동 정지 및 재시작 위치 리셋
+        if (backgroundMusic) {
+            try {
+                backgroundMusic.pause();
+                backgroundMusic.currentTime = 0;
+            } catch (e) {
+                console.warn('backgroundMusic pause/reset failed', e);
+            }
+        }
         
         // 🔄 타이머 UI를 비행 전 모드로 전환.               initializeTimerUI();  
 
