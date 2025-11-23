@@ -406,8 +406,27 @@ document.addEventListener('DOMContentLoaded', function() {
             map.removeSource('route');
         }
 
-        // flyTo 대신 jumpTo 사용
-        map.jumpTo({ center: fromLngLat, zoom: 15.5, pitch: 60 });
+        // 🆕 [수정] 각도 계산 함수 (초기 방향 설정 및 애니메이션용)
+        function calcBearing(lng1, lat1, lng2, lat2) {
+            const toRad = Math.PI / 180;
+            const toDeg = 180 / Math.PI;
+            const dLon = (lng2 - lng1) * toRad;
+            const y = Math.sin(dLon) * Math.cos(lat2 * toRad);
+            const x = Math.cos(lat1 * toRad) * Math.sin(lat2 * toRad) -
+                      Math.sin(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.cos(dLon);
+            return (Math.atan2(y, x) * toDeg + 360) % 360;
+        }
+
+        // 🆕 [수정] 시작 시 도착지 방향으로 각도(bearing) 설정
+        const initialBearing = calcBearing(fromLngLat[0], fromLngLat[1], toLngLat[0], toLngLat[1]);
+
+        // flyTo 대신 jumpTo 사용, bearing 옵션 추가
+        map.jumpTo({ 
+            center: fromLngLat, 
+            zoom: 15.5, 
+            pitch: 60,
+            bearing: initialBearing // 📍 도착지 방향을 바라보도록 설정
+        });
 
         const fps = 30; 
         const steps = durationSec * fps;
@@ -438,16 +457,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let lastCalculatedDistance = initialFlightDistance; 
         lastMoneyGainDistance = 0; 
 
-        function calcBearing(lng1, lat1, lng2, lat2) {
-            const toRad = Math.PI / 180;
-            const toDeg = 180 / Math.PI;
-            const dLon = (lng2 - lng1) * toRad;
-            const y = Math.sin(dLon) * Math.cos(lat2 * toRad);
-            const x = Math.cos(lat1 * toRad) * Math.sin(lat2 * toRad) -
-                      Math.sin(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.cos(dLon);
-            return (Math.atan2(y, x) * toDeg + 360) % 360;
-        }
-
         function animate(){
             // 🚀 비행 중지(isFlying = false) 시 애니메이션 루프 즉시 종료
             if (!isFlying) return;
@@ -477,6 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 부드러운 이동을 위해 easeTo 사용, duration 0으로 하여 실시간 추적
                 map.easeTo({
                     center: currentPos,
+                    bearing: angle, // 📍 애니메이션 중에도 진행 방향을 계속 바라보게 하려면 이 줄을 활성화 (선택사항)
                     duration: 0 
                 });
             }
@@ -501,9 +511,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function isSeatAvailable(seatClass) {
         const rand = Math.random();
-        if (seatClass === 'F') return rand > 0.3; 
-        if (seatClass === 'B') return rand > 0.2; 
-        return rand > 0.05; 
+        // 🆕 [수정] 확률 로직 변경
+        // F: 4% 확률로 true (예약 가능)
+        if (seatClass === 'F') return rand < 0.04; 
+        // B: 10% 확률로 true (예약 가능)
+        if (seatClass === 'B') return rand < 0.10; 
+        // E: 95% 확률로 true (거의 항상 가능)
+        return rand < 0.95; 
     }
 
     // UI 렌더링
