@@ -273,11 +273,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return createMarkerElement(className, html);
     }
 
-    // 🌟 [수정됨] flight.png 파일 사용 및 스타일 개선 (원형 잘림 방지)
+    // 🌟 flight.png 파일 사용
     function createAirplaneElement() {
         const el = document.createElement('div');
         el.className = 'airplane-div-icon';
-        // border-radius 삭제, 파일명 flight.png로 변경
         el.innerHTML = `<img src="flight.png" class="plane-img" style="width:40px; height:40px; display:block;">`;
         el.style.width = '40px';
         el.style.height = '40px';
@@ -407,9 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
             map.removeSource('route');
         }
 
-        // 🌟 [핵심 수정] flyTo 대신 jumpTo 사용! 
-        // 애니메이션 없이 즉시 화면을 확대(Zoom 15.5)하고 3D 각도(Pitch 60)를 줍니다.
-        // 이렇게 해야 이어지는 animate 루프의 panTo에 의해 확대가 취소되지 않습니다.
+        // flyTo 대신 jumpTo 사용
         map.jumpTo({ center: fromLngLat, zoom: 15.5, pitch: 60 });
 
         const fps = 30; 
@@ -609,7 +606,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.arrival-item').forEach(i=>{i.style.display='none';i.classList.remove('selected-arrival');});
                 div.classList.add('selected-arrival'); div.style.display='block'; 
                 selectedArrival=city; ticketBtn.style.display='block'; ticketBtn.textContent='좌석 선택';
-                ticketBtn.onclick=showTicketModal; ticketBtn.onmousedown = null;
+                
+                // 🛑 [수정됨] 이벤트 초기화 후 클릭 이벤트 재할당
+                ticketBtn.onmousedown = null;
+                ticketBtn.onmouseup = null;
+                ticketBtn.onmouseleave = null;
+                ticketBtn.ontouchstart = null;
+                ticketBtn.ontouchend = null;
+                ticketBtn.onclick=showTicketModal; 
             };
             arrivalList.appendChild(div);
         });
@@ -778,10 +782,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         timerSeconds=0; selectedArrival=null; autoFollow=true;
         
-        // 🌟 [수정됨] 비행 중지 시 확실하게 지구본 뷰(Zoom 1.5)로 돌아가도록 설정
         map.flyTo({ center: [127, 37], zoom: 1.5, pitch: 0 });
 
         controlsContainer.classList.remove('controls-disabled'); ticketBtn.classList.remove('disabled-during-flight');
+        
+        // 🛑 [수정됨] 버튼 이벤트 리스너 확실한 초기화 (꾹 누르기 기능 제거)
+        ticketBtn.onmousedown = null;
+        ticketBtn.onmouseup = null;
+        ticketBtn.onmouseleave = null;
+        ticketBtn.ontouchstart = null;
+        ticketBtn.ontouchend = null;
+        ticketBtn.onclick = null;
+        ticketBtn.style.backgroundImage = '';
+
         selectedFlightInfo.style.display='none'; departureSelect.style.display = 'block'; departureSearch.style.display = 'block';
         if (!completed) { departureSelect.value=''; currentDeparture=null; renderDepartureSelect(); }
         if (userName) updateGreeting(userName);
