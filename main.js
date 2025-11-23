@@ -298,6 +298,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     followIcon.textContent = '📍';
     toggleFollowBtn.onclick = toggleFollow;
+    
+    // 💡 [추가] 사용자가 지도를 드래그하면 자동으로 따라가기 모드 해제 (UX 향상)
+    map.on('dragstart', () => {
+        if (isFlying && autoFollow) {
+            autoFollow = false;
+            followIcon.textContent = '☝️';
+        }
+    });
 
     // 사용자 이름 및 시간 로직
     function loadUserName() {
@@ -406,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
             map.removeSource('route');
         }
 
-        // 🆕 [수정] 각도 계산 함수 (초기 방향 설정 및 애니메이션용)
+        // 각도 계산 함수
         function calcBearing(lng1, lat1, lng2, lat2) {
             const toRad = Math.PI / 180;
             const toDeg = 180 / Math.PI;
@@ -417,15 +425,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return (Math.atan2(y, x) * toDeg + 360) % 360;
         }
 
-        // 🆕 [수정] 시작 시 도착지 방향으로 각도(bearing) 설정
         const initialBearing = calcBearing(fromLngLat[0], fromLngLat[1], toLngLat[0], toLngLat[1]);
 
-        // flyTo 대신 jumpTo 사용, bearing 옵션 추가
+        // 🚀 비행 시작 시 도착지 방향(bearing)으로 설정
         map.jumpTo({ 
             center: fromLngLat, 
             zoom: 15.5, 
             pitch: 60,
-            bearing: initialBearing // 📍 도착지 방향을 바라보도록 설정
+            bearing: initialBearing 
         });
 
         const fps = 30; 
@@ -458,7 +465,6 @@ document.addEventListener('DOMContentLoaded', function() {
         lastMoneyGainDistance = 0; 
 
         function animate(){
-            // 🚀 비행 중지(isFlying = false) 시 애니메이션 루프 즉시 종료
             if (!isFlying) return;
 
             if(step >= path.length){ 
@@ -483,11 +489,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if(autoFollow) {
-                // 부드러운 이동을 위해 easeTo 사용, duration 0으로 하여 실시간 추적
-                map.easeTo({
-                    center: currentPos,
-                    bearing: angle, // 📍 애니메이션 중에도 진행 방향을 계속 바라보게 하려면 이 줄을 활성화 (선택사항)
-                    duration: 0 
+                // 🛑 [핵심 수정] easeTo 대신 jumpTo를 사용하고, bearing(회전) 업데이트를 제거하여 자유로운 확대/축소 및 회전 허용
+                map.jumpTo({
+                    center: currentPos
+                    // bearing: angle  <-- 이 부분을 주석 처리하거나 제거하여 화면이 강제로 돌아가는 것을 방지
                 });
             }
 
@@ -511,12 +516,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function isSeatAvailable(seatClass) {
         const rand = Math.random();
-        // 🆕 [수정] 확률 로직 변경
-        // F: 4% 확률로 true (예약 가능)
         if (seatClass === 'F') return rand < 0.04; 
-        // B: 10% 확률로 true (예약 가능)
         if (seatClass === 'B') return rand < 0.10; 
-        // E: 95% 확률로 true (거의 항상 가능)
         return rand < 0.95; 
     }
 
@@ -621,7 +622,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.classList.add('selected-arrival'); div.style.display='block'; 
                 selectedArrival=city; ticketBtn.style.display='block'; ticketBtn.textContent='좌석 선택';
                 
-                // 🛑 [수정됨] 이벤트 초기화 후 클릭 이벤트 재할당
                 ticketBtn.onmousedown = null;
                 ticketBtn.onmouseup = null;
                 ticketBtn.onmouseleave = null;
@@ -800,7 +800,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         controlsContainer.classList.remove('controls-disabled'); ticketBtn.classList.remove('disabled-during-flight');
         
-        // 🛑 [수정됨] 버튼 이벤트 리스너 확실한 초기화 (꾹 누르기 기능 제거)
         ticketBtn.onmousedown = null;
         ticketBtn.onmouseup = null;
         ticketBtn.onmouseleave = null;
