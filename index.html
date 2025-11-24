@@ -2,32 +2,12 @@
 <html lang="ko">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DUKKI FocusFlight 3D (OL/Cesium)</title>
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.111.0/Build/Cesium/Widgets/widgets.css">
-    
-    <link rel="stylesheet" href="style.css" />
-    <style>
-        /* OpenLayers/Cesium 연동 시 지도 컨테이너 스타일 */
-        #map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        /* OpenLayers 마커(Overlay)가 UI와 겹치지 않게 z-index 조정 */
-        .ol-overlay-container { z-index: 10; }
-        /* Cesium 저작권 표시 위치 조정 (UI와 겹치지 않게) */
-        .cesium-viewer-bottom {
-            bottom: 80px !important; 
-            opacity: 0.7;
-        }
-        /* OpenLayers 기본 줌 컨트롤 숨김 (단순화를 위해) */
-        .ol-zoom, .ol-rotate { display: none; }
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DUKKI FocusFlight</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<link rel="stylesheet" href="style.css" />
+
 </head>
 
 <body class="map-style-satellite"> 
@@ -36,105 +16,216 @@
 
 <div id="map"></div>
 
-<div id="flightPopup" class="flight-popup" style="display:none;"></div>
-
 <div id="stampAnimation">
     <div style="
         font-size: 0.8em; 
         font-weight: 900; 
         line-height: 1;
-        margin-bottom: 2px;
-    ">FLIGHT SUCCESS</div>
-    <div id="stampCode"></div>
+        transform: rotate(10deg);
+        border: 10px solid var(--color-accent-red); 
+        border-radius: 50%; 
+        padding: 40px; 
+        display: inline-block;
+        background: rgba(0,0,0,0.2);
+    ">
+        <span style="display: block; transform: rotate(-10deg);">
+            <span style="font-size: 0.3em; display: block;">FLIGHT</span>
+            <span style="font-size: 1em; display: block;">COMPLETED</span>
+        </span>
+    </div>
 </div>
 
-<div id="startContainer" class="glass-morphism">
-    <h2 id="startTitle">DUKKI FocusFlight 3D</h2>
-    <div id="welcomeMessage"></div>
-    <div id="currentTime" class="time-display"></div>
-    
-    <div id="userStats" class="stats-container">
-        <div class="stat-item"><span class="stat-label">이름</span><span id="userNameStat"></span></div>
-        <div class="stat-item"><span class="stat-label">잔액</span><span id="moneyStat">0원</span></div>
-        <div class="stat-item"><span class="stat-label">비행 수</span><span id="flightCountStat">0</span></div>
+<div id="flightPopup" class="flight-popup" style="display:none;"></div>
+
+<button class="money-button" id="moneyDisplay">0 G</button>
+
+<button class="follow-toggle-btn" id="followToggleBtn" style="display:none;">🎯</button>
+
+<div id="timerContainer">
+    <div id="timerDisplayPreFlight">DUKKI FocusFlight</div>
+
+    <div class="timer-box timer-box-time">
+        <div class="timer-box-label">경과 시간</div>
+        <div class="timer-box-value" id="timeElapsedValue">00m 00s</div>
+        <div class="timer-box-label" style="margin-top: 5px;">남은 시간</div>
+        <div class="timer-box-value" id="timeRemainingValue">00m 00s</div>
     </div>
 
-    <div id="searchContainer">
-        <input type="text" id="arrivalSearch" placeholder="도착 공항 검색..." />
-        <div id="arrivalList" class="arrival-list"></div>
+    <div id="focusStatus">집중 모드 활성화 🤫</div>
+
+    <div class="timer-box timer-box-clock">
+        <div class="clock-item">
+            <div class="timer-box-label" id="depClockCode">ICN (서울)</div>
+            <div class="timer-box-value" id="depClockTime">00:00 AM</div>
+        </div>
+        <div class="clock-item">
+            <div class="timer-box-label" id="arrClockCode">JFK (뉴욕)</div>
+            <div class="timer-box-value" id="arrClockTime">00:00 AM</div>
+        </div>
     </div>
     
-    <div id="flightInfo" class="flight-info-container" style="display:none;">
-        <div class="flight-detail">
-            <span>출발지</span><span id="departureCode"></span>
+    <div class="timer-box timer-box-distance">
+        <div class="timer-box-label">비행 거리</div>
+        <div class="timer-box-value" id="distanceValue">0 km</div>
+        <div class="timer-box-label" style="margin-top: 5px;">남은 거리</div>
+        <div class="timer-box-value" id="distanceRemainingValue">0 km</div>
+    </div>
+
+</div>
+
+<div class="controls-container">
+    <h3 id="greetingText" style="color:var(--color-primary); margin:0 0 10px 0;">기장님, 환영합니다!</h3>
+
+    <label for="departureSelect" style="color:var(--color-text-dim); font-size:14px; margin-bottom: 5px;">출발지 (Departure)</label>
+    <select id="departureSelect"></select>
+
+    <label for="arrivalList" style="color:var(--color-text-dim); font-size:14px; margin-top: 10px; margin-bottom: 5px;">도착지 (Arrival)</label>
+    <div id="arrivalList" style="display:none;">
         </div>
-        <div class="flight-detail">
-            <span>도착지</span><span id="arrivalCode"></span>
+    
+    <div id="selectedFlightInfo" style="display:none;"></div>
+
+    <button id="ticketBtn">
+        티켓 발권 (5초 꾹 누르기)
+    </button>
+</div>
+
+<div id="bottomNav">
+    <button id="homeBtn" class="active">✈️ 홈</button>
+    <button id="recordsBtn">📜 기록</button>
+    <button id="trendsBtn">📈 추세</button>
+    <button id="shopBtn">🛍️ 상점</button>
+    <button id="settingsBtn">⚙️ 설정</button>
+</div>
+
+<div id="recordsContainer" style="display:none;">
+    <button class="close-container-btn" id="closeRecordsBtn">×</button>
+    <h2 style="text-align:center; color:var(--color-primary);">📜 나의 비행 기록</h2>
+    <div style="text-align:center;">
+        <button id="clearRecordsBtn">모든 기록 삭제</button>
+    </div>
+    <div id="records">
         </div>
-        <div class="flight-detail">
-            <span>비행 시간</span><span id="flightDuration"></span>
+</div>
+
+<div id="trendsContainer" style="display:none;">
+    </div>
+
+<div class="modal" id="nameModal">
+    <div class="modal-content">
+        <h3>환영합니다, 기장님!</h3>
+        <p style="color:var(--color-text-dim);">비행 기록에 사용될 이름을 입력해주세요.</p>
+        <input type="text" id="userNameInput" placeholder="기장님의 이름 또는 닉네임" maxlength="15">
+        <div class="modal-buttons-container">
+            <button id="saveNameBtn">확인</button>
         </div>
-        <div class="flight-detail">
-            <span>보상 금액</span><span id="rewardAmount"></span>
+    </div>
+</div>
+
+<div class="modal" id="ticketModal">
+    <div class="modal-content">
+        <button class="close-container-btn" id="closeModalBtn">×</button>
+        <h3>🎫 탑승권 발권</h3>
+        
+        <div id="seatSelectionContainer">
+            <h4 style="color:var(--color-primary); margin-top: 10px; margin-bottom: 5px;">집중 모드 선택 🤫</h4>
+            <div id="focusModeButtons">
+                <button class="focus-button selected" data-mode="normal" style="background:#5a646c; color:white;">일반 모드 (x1)</button>
+                <button class="focus-button" data-mode="medium" style="background:#00ADB5; color:white;">중간 집중 (x1.5)</button>
+                <button class="focus-button" data-mode="hard" style="background:#FFD700; color:#333;">고강도 집중 (x2.0)</button>
+            </div>
+            
+            <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">좌석 선택 💺</h4>
+            
+            <div id="fuselageWrapper">
+                <div class="fuselage-part cockpit"></div>
+
+                <div id="seatMap">
+                    <div class="section-facility">
+                        <div class="facility-item lav-left">🚾</div>
+                        <div class="facility-item">GALLEY</div>
+                    </div>
+                    <div class="section-separator">FIRST CLASS</div>
+                    <div class="row" data-class="F"><div class="seat" data-class="F">1A</div><div class="seat" data-class="F">1B</div><div class="aisle"></div><div class="seat" data-class="F">1D</div><div class="seat" data-class="F">1E</div><div class="aisle"></div><div class="seat" data-class="F">1G</div><div class="seat" data-class="F">1H</div></div>
+                    <div class="row" data-class="F"><div class="seat unavailable" data-class="F">2A</div><div class="seat" data-class="F">2B</div><div class="aisle"></div><div class="seat" data-class="F">2D</div><div class="seat" data-class="F">2E</div><div class="aisle"></div><div class="seat" data-class="F">2G</div><div class="seat" data-class="F">2H</div></div>
+                    
+                    <div class="section-facility">
+                        <div class="facility-item exit-left">🚪 EXIT</div>
+                        <div class="facility-item">GALLEY</div>
+                        <div class="facility-item exit-right">EXIT 🚪</div>
+                    </div>
+                    <div class="section-separator">BUSINESS CLASS</div>
+                    <div class="row" data-class="B"><div class="seat" data-class="B">10A</div><div class="seat" data-class="B">10B</div><div class="aisle"></div><div class="seat" data-class="B">10C</div><div class="seat unavailable" data-class="B">10D</div><div class="seat" data-class="B">10E</div><div class="aisle"></div><div class="seat" data-class="B">10F</div><div class="seat" data-class="B">10G</div></div>
+                    <div class="row" data-class="B"><div class="seat" data-class="B">11A</div><div class="seat" data-class="B">11B</div><div class="aisle"></div><div class="seat" data-class="B">11C</div><div class="seat" data-class="B">11D</div><div class="seat" data-class="B">11E</div><div class="aisle"></div><div class="seat" data-class="B">11F</div><div class="seat" data-class="B">11G</div></div>
+                    
+                    <div class="section-facility">
+                        <div class="facility-item lav-left">🚾</div>
+                        <div class="facility-item">GALLEY</div>
+                        <div class="facility-item lav-right">🚾</div>
+                    </div>
+                    <div class="section-separator">ECONOMY CLASS</div>
+                    <div class="row" data-class="E"><div class="seat" data-class="E">20A</div><div class="seat" data-class="E">20B</div><div class="seat" data-class="E">20C</div><div class="aisle"></div><div class="seat" data-class="E">20D</div><div class="seat" data-class="E">20E</div><div class="seat" data-class="E">20F</div><div class="aisle"></div><div class="seat unavailable" data-class="E">20G</div><div class="seat" data-class="E">20H</div><div class="seat" data-class="E">20I</div></div>
+                    <div class="row" data-class="E"><div class="seat" data-class="E">21A</div><div class="seat" data-class="E">21B</div><div class="seat" data-class="E">21C</div><div class="aisle"></div><div class="seat" data-class="E">21D</div><div class="seat" data-class="E">21E</div><div class="seat" data-class="E">21F</div><div class="aisle"></div><div class="seat" data-class="E">21G</div><div class="seat" data-class="E">21H</div><div class="seat" data-class="E">21I</div></div>
+                    <div class="row" data-class="E"><div class="seat" data-class="E">22A</div><div class="seat" data-class="E">22B</div><div class="seat" data-class="E">22C</div><div class="aisle"></div><div class="seat" data-class="E">22D</div><div class="seat" data-class="E">22E</div><div class="seat" data-class="E">22F</div><div class="aisle"></div><div class="seat" data-class="E">22G</div><div class="seat" data-class="E">22H</div><div class="seat" data-class="E">22I</div></div>
+                    <div class="row" data-class="E"><div class="seat" data-class="E">23A</div><div class="seat" data-class="E">23B</div><div class="seat" data-class="E">23C</div><div class="aisle"></div><div class="seat" data-class="E">23D</div><div class="seat" data-class="E">23E</div><div class="seat" data-class="E">23F</div><div class="aisle"></div><div class="seat" data-class="E">23G</div><div class="seat" data-class="E">23H</div><div class="seat" data-class="E">23I</div></div>
+                </div>
+
+                <div class="fuselage-part tail"></div>
+            </div>
+            </div>
+        
+        <div class="modal-buttons-container">
+            <button id="confirmSelectionBtn" disabled>도착지 및 좌석을 선택해 주세요</button>
+        </div>
+
+        <div id="boardingPassContainer">
+            <h4 style="color:var(--color-primary); margin-top: 10px; margin-bottom: 5px; text-align: center;">탑승권 (Boarding Pass)</h4>
+            
+            <div class="boarding-pass">
+                <div class="bp-info">
+                    <div class="bp-route" id="bpRoute"></div>
+                    <div class="bp-details" id="bpDetails"></div>
+                </div>
+                <div class="bp-seat-mode">
+                    <div class="bp-seat" id="bpSeat"></div>
+                    <div class="bp-mode" id="bpMode"></div>
+                </div>
+            </div>
+            <div class="barcode-panel">
+                <div class="barcode"></div>
+                <div class="barcode-text">G0000-00000000</div>
+            </div>
+
+            <div id="slideTrack" style="display: none;">
+                <div id="slideBackground"></div>
+                <div id="slideText">슬라이드하여 비행 시작 🚀</div>
+                <div id="slideHandle">✈️</div>
+            </div>
         </div>
         
-        <div id="slideTrack" class="slide-track">
-            <div id="slideBackground"></div>
-            <div id="slideText">슬라이드하여 비행 시작</div>
-            <div id="slideHandle">✈️</div>
-        </div>
     </div>
 </div>
 
-<div id="recordsContainer" class="modal" style="display:none;">
+<div class="modal" id="settingsModal">
     <div class="settings-content">
-        <button class="close-container-btn" id="closeRecordsBtn">×</button>
-        <h3>✈️ 비행 기록</h3>
-        <div class="record-filter-buttons">
-            <button class="record-filter-btn active" data-filter="all">전체</button>
-            <button class="record-filter-btn" data-filter="success">성공</button>
-            <button class="record-filter-btn" data-filter="fail">실패</button>
+        <button class="close-container-btn" id="closeSettingsModalBtn">×</button>
+        <h4 style="color:var(--color-primary); margin-top: 5px; margin-bottom: 5px;">지도 스타일 설정 🗺️</h4>
+        <div id="mapStyleButtons">
+            <button class="map-style-button" data-style="2d">2D 일반 지도</button>
+            <button class="map-style-button" data-style="dark2d">2D 다크모드 지도</button> <button class="map-style-button active" data-style="satellite">위성 지도</button> 
         </div>
-        <ul id="recordList" class="record-list"></ul>
-    </div>
-</div>
-
-<div id="trendsContainer" class="modal" style="display:none;">
-    <div class="settings-content">
-        <button class="close-container-btn" id="closeTrendsBtn">×</button>
-        <h3>📈 시장 동향</h3>
-        <div id="trendsContent" style="text-align: center; color: var(--color-text-dim); margin-top: 50px;">
-            <p>시장의 변동성이 감지됩니다.</p>
-            <p id="trendInfo"></p>
-        </div>
-    </div>
-</div>
-
-<div id="settingsModal" class="modal" style="display:none;">
-    <div class="settings-content">
-        <button class="close-container-btn" id="closeSettingsBtn">×</button>
-        <h3>⚙️ 설정</h3>
-        <h4 style="color:var(--color-primary); margin-bottom: 5px;">사용자 이름</h4>
-        <div class="username-section">
-            <input type="text" id="usernameInput" placeholder="이름을 입력하세요" />
-            <button id="saveUsernameBtn">저장</button>
-        </div>
-        <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">지도 스타일 (3D 활성화/비활성화)</h4>
-        <div class="style-buttons">
-            <button class="map-style-button" data-style="2d">2D (일반)</button>
-            <button class="map-style-button" data-style="2d-dark">2D (다크)</button>
-            <button class="map-style-button active" data-style="satellite">3D (지구본)</button>
-        </div>
+        
         <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">데이터 관리 💾</h4>
         <button onclick="exportData()">데이터 내보내기</button>
         <button onclick="importData()">데이터 불러오기</button>
+        
         <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">By TEAMBUCK</div> 
-        <button id="closeSettingsModalBtn">닫기</button>
     </div>
 </div>
 
 <div class="modal" id="shopContainer">
-    <div class="settings-content"> <button class="close-container-btn" id="closeShopBtn">×</button> 
+    <div class="settings-content">
+        <button class="close-container-btn" id="closeShopBtn">×</button> 
         <h3>🛍️ 아이템 상점</h3>
         <p style="text-align: center; color: var(--color-text-dim); margin-top: 50px; margin-bottom: 50px;">
             아직 준비 중입니다.<br>
@@ -144,18 +235,9 @@
     </div>
 </div>
 
-<div class="bottom-nav glass-morphism">
-    <button id="homeBtn" class="nav-btn active"><span class="icon">🏠</span>홈</button>
-    <button id="recordsBtn" class="nav-btn"><span class="icon">📋</span>기록</button>
-    <button id="trendsBtn" class="nav-btn"><span class="icon">📈</span>동향</button>
-    <button id="shopBtn" class="nav-btn"><span class="icon">🛍️</span>상점</button>
-    <button id="settingsBtn" class="nav-btn"><span class="icon">⚙️</span>설정</button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/cesium@1.111.0/Build/Cesium/Cesium.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ol-cesium@2.15.0/dist/olcs.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="main.js"></script>
+
 </body>
 </html>
