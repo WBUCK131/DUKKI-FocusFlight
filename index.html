@@ -3,19 +3,30 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DUKKI FocusFlight 3D</title>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <title>DUKKI FocusFlight 3D (OL/Cesium)</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.111.0/Build/Cesium/Widgets/widgets.css">
+    
     <link rel="stylesheet" href="style.css" />
     <style>
-        /* Mapbox 캔버스가 전체 화면을 덮도록 설정 */
-        .mapboxgl-canvas { outline: none; }
-        /* 마커가 지도 위에 잘 뜨도록 z-index 조정 */
-        .mapboxgl-marker { z-index: 10; }
-        /* Mapbox 로고/속성 표시 위치 조정 (UI와 겹치지 않게) */
-        .mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right {
+        /* OpenLayers/Cesium 연동 시 지도 컨테이너 스타일 */
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        /* OpenLayers 마커(Overlay)가 UI와 겹치지 않게 z-index 조정 */
+        .ol-overlay-container { z-index: 10; }
+        /* Cesium 저작권 표시 위치 조정 (UI와 겹치지 않게) */
+        .cesium-viewer-bottom {
             bottom: 80px !important; 
             opacity: 0.7;
         }
+        /* OpenLayers 기본 줌 컨트롤 숨김 (단순화를 위해) */
+        .ol-zoom, .ol-rotate { display: none; }
     </style>
 </head>
 
@@ -32,156 +43,87 @@
         font-size: 0.8em; 
         font-weight: 900; 
         line-height: 1;
-        transform: rotate(10deg);
-        border: 10px solid var(--color-accent-red); 
-        border-radius: 50%; 
-        padding: 40px; 
-        display: inline-block;
-        background: rgba(0,0,0,0.2);
-    ">
-        <span style="display: block; transform: rotate(-10deg);">
-            <span style="font-size: 0.3em; display: block;">FLIGHT</span>
-            <span style="font-size: 1em; display: block;">COMPLETED</span>
-            <span style="font-size: 0.3em; display: block;">✈️</span>
-        </span>
+        margin-bottom: 2px;
+    ">FLIGHT SUCCESS</div>
+    <div id="stampCode"></div>
+</div>
+
+<div id="startContainer" class="glass-morphism">
+    <h2 id="startTitle">DUKKI FocusFlight 3D</h2>
+    <div id="welcomeMessage"></div>
+    <div id="currentTime" class="time-display"></div>
+    
+    <div id="userStats" class="stats-container">
+        <div class="stat-item"><span class="stat-label">이름</span><span id="userNameStat"></span></div>
+        <div class="stat-item"><span class="stat-label">잔액</span><span id="moneyStat">0원</span></div>
+        <div class="stat-item"><span class="stat-label">비행 수</span><span id="flightCountStat">0</span></div>
     </div>
-</div>
 
-<div id="greetingContainer" style="display: none;"></div>
-
-<div class="controls-container">
-  <input type="text" id="departureSearch" placeholder="출발지 검색 (도시, 코드)">
-  <select id="departureSelect">
-    <option value="" disabled selected>출발 도시 선택</option>
-  </select>
-  <div id="selectedFlightInfo" style="display:none;"></div> 
-  <input type="text" id="arrivalSearch" placeholder="도착지 검색 (도시, 코드)" style="display:none;">
-  <div id="arrivalList"></div>
-  <button id="ticketBtn" style="display:none;">좌석 선택</button>
-</div>
-
-<div id="timerContainer" >  
-    <div id="timerDisplayPreFlight">DUKKI Focus</div>  
-    <div class="timer-box timer-box-time">  
-            <div class="timer-box-label">남은 시간</div>  
-            <div id="timerDisplay" class="timer-box-value">00H00M00S</div>  
-            <div id="focusStatus"></div>  
-        </div>  
-        <div class="timer-box timer-box-clock">  
-            <div class="clock-item">  
-                <div class="timer-box-label">현재시간</div>  
-                <div id="currentTimeDisplay" class="timer-box-value">--:--</div>  
-            </div>  
-            <div class="clock-item">  
-                <div class="timer-box-label">현지시간</div>  
-                <div id="localTimeDisplay" class="timer-box-value">--:--</div>  
-            </div>  
-        </div>  
-        <div class="timer-box timer-box-distance">  
-            <div class="timer-box-label">남은 거리</div>  
-            <div id="distanceDisplay" class="timer-box-value">0 KM</div>  
-        </div>  
-</div>  
-
-<button id="moneyButton" class="money-button">
-    💰 <span id="moneyDisplay">1</span>
-</button>
-
-<button id="toggleFollowBtn" class="follow-toggle-btn">
-    <span id="followIcon">📍</span>
-</button>
-
-<div id="recordsContainer">
-  <button class="close-container-btn">×</button> 
-  <h3 style="text-align:center; margin-top:50px;">✈️ 여행 기록</h3>
-  <div id="recordFilterContainer">
-      <button class="record-filter-btn active" data-filter="all">전체</button>
-      <button class="record-filter-btn" data-filter="completed">완료함</button>
-      <button class="record-filter-btn" data-filter="incomplete">미완료</button>
-  </div>
-  <div style="text-align: center; padding: 0 20px;">
-    <button id="clearRecordsBtn">기록 초기화</button>
-  </div>
-  <div id="records"></div>
-</div>
-
-<div id="trendsContainer">
-  <button class="close-container-btn">×</button> 
-  <h3 style="text-align:center; margin-top:50px;">📊 비행 추세 분석</h3>
-  <div class="trends-grid" id="trendsData"></div>
-</div>
-
-<div class="modal" id="ticketModal">
-  <div class="modal-content">
-    <h3>티켓팅</h3>
-    <div style="text-align:center; font-weight:bold; margin-bottom:10px;">
-      선택: <span id="selectedSeatDisplay" style="color:var(--color-primary);">좌석 없음</span> / 
-      <span id="selectedFocusModeDisplay" style="color:var(--color-primary);">모드 없음</span>
+    <div id="searchContainer">
+        <input type="text" id="arrivalSearch" placeholder="도착 공항 검색..." />
+        <div id="arrivalList" class="arrival-list"></div>
     </div>
-    <div id="seatSelectionContainer">
-        <div id="fuselageWrapper">
-            <span class="fuselage-part cockpit"></span>
-            <div id="seatMap"></div>
-            <span class="fuselage-part tail"></span>
+    
+    <div id="flightInfo" class="flight-info-container" style="display:none;">
+        <div class="flight-detail">
+            <span>출발지</span><span id="departureCode"></span>
+        </div>
+        <div class="flight-detail">
+            <span>도착지</span><span id="arrivalCode"></span>
+        </div>
+        <div class="flight-detail">
+            <span>비행 시간</span><span id="flightDuration"></span>
+        </div>
+        <div class="flight-detail">
+            <span>보상 금액</span><span id="rewardAmount"></span>
+        </div>
+        
+        <div id="slideTrack" class="slide-track">
+            <div id="slideBackground"></div>
+            <div id="slideText">슬라이드하여 비행 시작</div>
+            <div id="slideHandle">✈️</div>
         </div>
     </div>
-    <div id="focusModeSelector"> 
-        집중 모드 선택:
-        <div id="focusModeButtons"></div> 
-    </div>
-    <button id="reselectSeatBtn" class="hidden" style="width:100%; background: var(--color-surface-lighter); color: var(--color-text-light); border: 1px solid var(--color-border-dark); margin-top: 5px;">
-        좌석 다시 선택 🔄
-    </button>
-    <div class="modal-buttons-container" id="selectionButtons">
-        <button id="confirmSelectionBtn" disabled>선택 완료 (티켓 발권)</button>
-        <button id="closeModalBtn">취소</button>
-    </div>
-    <div id="boardingPassContainer" style="display:none;">
-        <div class="boarding-pass">
-            <div class="bp-info">
-                <div class="bp-route" id="bpRoute">ICN → JFK</div>
-                <div class="bp-details">
-                    <span id="bpFlightNo">FLT: AA000</span> | 
-                    <span id="bpGate">GATE: A9</span> |
-                    <span id="bpClass">CLASS: F</span>
-                </div>
-            </div>
-            <div class="bp-seat-mode">
-                <div class="bp-seat" id="bpSeat">A-Z</div>
-                <div class="bp-mode" id="bpFocusMode"></div> 
-            </div>
-        </div>
-        <div class="barcode-panel">
-            <div class="barcode"></div>
-            <div class="barcode-text" id="bpBarcodeText">FOCUSFLIGHT-A9-A-Z-STUDY-DUKKI</div>
-            <div id="slideTrack">
-                <div id="slideBackground"></div>
-                <div id="slideHandle">✈️</div>
-                <div id="slideText">밀어서 티켓 스캔 🎫</div> 
-            </div>
-        </div>
-    </div>
-  </div>
 </div>
 
-<div class="modal" id="nameModal">
-    <div class="modal-content">
-        <h3>환영합니다! 🚀</h3>
-        <p>집중 비행 시뮬레이터에 오신 것을 환영합니다.<br>당신의 이름을 설정해주세요.</p>
-        <input type="text" id="userNameInput" placeholder="이름을 입력하세요">
-        <button id="saveNameBtn" style="margin-top: 20px;">이름 설정 완료</button>
-    </div>
-</div>
-
-<div class="modal" id="settingsModal">
+<div id="recordsContainer" class="modal" style="display:none;">
     <div class="settings-content">
-        <h3>설정 ⚙️</h3>
-        <button id="editNameBtn">이름 수정하기</button>
-        <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">지도 스타일 설정 🗺️</h4>
-        <div id="mapStyleButtons">
-            <button class="map-style-button" data-style="2d">일반</button>
-            <button class="map-style-button" data-style="2d-dark">다크</button> 
-            <button class="map-style-button active" data-style="satellite">위성</button> 
+        <button class="close-container-btn" id="closeRecordsBtn">×</button>
+        <h3>✈️ 비행 기록</h3>
+        <div class="record-filter-buttons">
+            <button class="record-filter-btn active" data-filter="all">전체</button>
+            <button class="record-filter-btn" data-filter="success">성공</button>
+            <button class="record-filter-btn" data-filter="fail">실패</button>
+        </div>
+        <ul id="recordList" class="record-list"></ul>
+    </div>
+</div>
+
+<div id="trendsContainer" class="modal" style="display:none;">
+    <div class="settings-content">
+        <button class="close-container-btn" id="closeTrendsBtn">×</button>
+        <h3>📈 시장 동향</h3>
+        <div id="trendsContent" style="text-align: center; color: var(--color-text-dim); margin-top: 50px;">
+            <p>시장의 변동성이 감지됩니다.</p>
+            <p id="trendInfo"></p>
+        </div>
+    </div>
+</div>
+
+<div id="settingsModal" class="modal" style="display:none;">
+    <div class="settings-content">
+        <button class="close-container-btn" id="closeSettingsBtn">×</button>
+        <h3>⚙️ 설정</h3>
+        <h4 style="color:var(--color-primary); margin-bottom: 5px;">사용자 이름</h4>
+        <div class="username-section">
+            <input type="text" id="usernameInput" placeholder="이름을 입력하세요" />
+            <button id="saveUsernameBtn">저장</button>
+        </div>
+        <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">지도 스타일 (3D 활성화/비활성화)</h4>
+        <div class="style-buttons">
+            <button class="map-style-button" data-style="2d">2D (일반)</button>
+            <button class="map-style-button" data-style="2d-dark">2D (다크)</button>
+            <button class="map-style-button active" data-style="satellite">3D (지구본)</button>
         </div>
         <h4 style="color:var(--color-primary); margin-top: 20px; margin-bottom: 5px;">데이터 관리 💾</h4>
         <button onclick="exportData()">데이터 내보내기</button>
@@ -202,15 +144,18 @@
     </div>
 </div>
 
-<div id="bottomNav">
-  <button id="homeBtn" class="active">홈</button>
-  <button id="recordBtn">여행 기록</button>
-  <button id="trendsBtn">추세</button>
-  <button id="shopBtn">🛍️ 상점</button> 
-  <button id="settingsBtn">⚙️ 설정</button> 
+<div class="bottom-nav glass-morphism">
+    <button id="homeBtn" class="nav-btn active"><span class="icon">🏠</span>홈</button>
+    <button id="recordsBtn" class="nav-btn"><span class="icon">📋</span>기록</button>
+    <button id="trendsBtn" class="nav-btn"><span class="icon">📈</span>동향</button>
+    <button id="shopBtn" class="nav-btn"><span class="icon">🛍️</span>상점</button>
+    <button id="settingsBtn" class="nav-btn"><span class="icon">⚙️</span>설정</button>
 </div>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cesium@1.111.0/Build/Cesium/Cesium.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ol-cesium@2.15.0/dist/olcs.js"></script>
+
 <script src="main.js"></script>
 </body>
 </html>
